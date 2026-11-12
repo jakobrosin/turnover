@@ -116,6 +116,8 @@ public enum SettingsBridge {
         dict["_outputDevices"] = SpeechPlayer.outputDevices().map { ["uid": $0.uid, "name": $0.name] }
         dict["_speechPortApps"] = SpeechPort.shared.appDecisions.map { ["id": $0.id, "name": $0.name, "allowed": $0.allowed] }
         dict["_otherLanguages"] = otherLanguagesState()
+        // The languages the Voice list offers, worked out here so the window and the speech rotor share one rule.
+        dict["_voiceLanguages"] = Languages.offeredVoiceLanguages
         // The app the window's "For this app" means: the last ordinary app in front that isn't TurnOver's own.
         if let f = frontApp { dict["_frontApp"] = ["bundle": f.bundle, "name": f.name] }
         guard let out = try? JSONSerialization.data(withJSONObject: dict), let s = String(data: out, encoding: .utf8) else { return }

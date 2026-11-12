@@ -124,6 +124,24 @@ public enum Languages {
         return config.speech.languageRates[base(language)]
     }
 
+    /// The languages whose voices are offered as the main voice (Settings' Voice list, the speech rotor), as base
+    /// codes in order: the ones chosen in Settings, or, none chosen, the Mac's own languages and English, which was
+    /// the fixed rule until 12 Nov 2026. The language of the voice in use is always among them, so the list in use
+    /// never loses its own voice.
+    public static func voiceLanguages(chosen: [String], preferred: [String], current: String?) -> [String] {
+        var out: [String] = []
+        func add(_ code: String) { let b = base(code); if !b.isEmpty, !out.contains(b) { out.append(b) } }
+        if chosen.isEmpty { preferred.forEach(add); add("en") } else { chosen.forEach(add) }
+        if let current { add(current) }
+        return out
+    }
+
+    /// The same, from the settings and the Mac as they are now.
+    public static var offeredVoiceLanguages: [String] {
+        voiceLanguages(chosen: config.speech.voiceLanguages, preferred: Locale.preferredLanguages,
+                       current: AVSpeechSynthesisVoice(identifier: config.speech.voice)?.language)
+    }
+
     /// Settings changed (a voice chosen, voices installed): look again.
     public static func forget() { lock.lock(); chosen.removeAll(); lock.unlock() }
 

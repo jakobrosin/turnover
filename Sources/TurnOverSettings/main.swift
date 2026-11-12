@@ -161,7 +161,25 @@ final class VoiceLists: ObservableObject {
     @Published private(set) var all: [AVSpeechSynthesisVoice] = []
     @Published private(set) var offered: [AVSpeechSynthesisVoice] = []
     @Published private(set) var rotorCandidates: [AVSpeechSynthesisVoice] = []
+    /// Every language with an installed voice that isn't a novelty, by its name in the Mac's language: the ticks
+    /// under "Show the voice languages".
+    @Published private(set) var installedLanguages: [(code: String, name: String)] = []
+    /// The languages whose voices are offered, as TurnOver worked them out (SettingsBridge's "_voiceLanguages"); nil
+    /// until TurnOver has answered, and then the rule it starts from: the Mac's languages and English.
+    private var languages: [String]?
     private var observer: NSObjectProtocol?
+
+    /// "pt-BR" → "pt", as TurnOver's Languages.base: the first two letters made Filipino (fil) Finnish.
+    static func base(_ code: String) -> String {
+        String(code.lowercased().split(whereSeparator: { $0 == "-" || $0 == "_" }).first ?? "")
+    }
+
+    /// The languages changed (a tick in Settings, another voice in use): the lists made again, only then.
+    func use(languages: [String]) {
+        guard languages != self.languages else { return }
+        self.languages = languages
+        refresh()
+    }
 
     private init() {
         refresh()
@@ -175,24 +193,28 @@ final class VoiceLists: ObservableObject {
     func label(for voice: AVSpeechSynthesisVoice) -> String { labels[voice.identifier] ?? voice.name }
 
     func refresh() {
-        let mine = Locale.preferredLanguages.map { String($0.prefix(2)) }
-        let wanted = Set(mine + ["en"])
+        let mine = languages ?? (Locale.preferredLanguages.map(Self.base) + ["en"])
+        let wanted = Set(mine)
         let voices = AVSpeechSynthesisVoice.speechVoices()
         all = voices
         // Not Apple's novelty voices (Bells, Bubbles, Zarvox and the rest, 15 of them: Oliver, 2 Nov 2026, "a big list of
         // shit nonsense voices that apple like to ship"). A novelty voice already chosen stays selectable (voices).
         let real = voices.filter { !$0.voiceTraits.contains(.isNoveltyVoice) }
-        // English and the Mac's own languages, the Mac's languages first and Eloquence before the rest.
-        offered = real.filter { wanted.contains(String($0.language.prefix(2))) }.sorted { a, b in
-            let la = mine.firstIndex(of: String(a.language.prefix(2))) ?? 99, lb = mine.firstIndex(of: String(b.language.prefix(2))) ?? 99
+        // The languages ticked in Settings, or English and the Mac's own: in that order, and Eloquence before the rest.
+        offered = real.filter { wanted.contains(Self.base($0.language)) }.sorted { a, b in
+            let la = mine.firstIndex(of: Self.base(a.language)) ?? 99, lb = mine.firstIndex(of: Self.base(b.language)) ?? 99
             if la != lb { return la < lb }
             let ea = a.identifier.contains("eloquence"), eb = b.identifier.contains("eloquence")
             if ea != eb { return ea }
             return a.name < b.name
         }
-        // The voices of the Mac's own languages and English, as the rotor offers them.
-        rotorCandidates = real.filter { wanted.contains(String($0.language.prefix(2))) }
+        // The voices of the same languages, as the rotor offers them.
+        rotorCandidates = real.filter { wanted.contains(Self.base($0.language)) }
             .sorted { $0.name == $1.name ? $0.language < $1.language : $0.name < $1.name }
+        var seen = Set<String>()
+        installedLanguages = real.map { Self.base($0.language) }.filter { !$0.isEmpty && seen.insert($0).inserted }
+            .map { (code: $0, name: Locale.current.localizedString(forLanguageCode: $0) ?? $0) }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         var made: [String: String] = [:]
         for v in voices {
             let language = Locale.current.localizedString(forIdentifier: v.language) ?? v.language
@@ -215,6 +237,31 @@ struct SpeechView: View {
     }
     @State private var showRotor = false
     @State private var showLanguages = false
+    @State private var showVoiceLanguages = false
+    /// The languages whose voices are offered, as TurnOver has them: the ticked ones, and the voice in use's.
+    private var voiceLanguages: [String] { model.special("_voiceLanguages") as? [String] ?? [] }
+    /// Those that have a row below. One of the Mac's languages with no voice installed (Estonian) is offered by the
+    /// rule and has nothing to show, so it is neither counted nor kept when the list is first changed.
+    private var shownLanguages: [String] { voiceLists.installedLanguages.map(\.code).filter { voiceLanguages.contains($0) } }
+    /// The language of the Mac voice in use: always offered, so it has no switch.
+    private var languageInUse: String? {
+        let current = model.get("speech", "voice") as? String ?? ""
+        return voiceLists.all.first { $0.identifier == current }.map { VoiceLists.base($0.language) }
+    }
+    /// One language's tick. The list is shown changed at once, as every setting is; TurnOver confirms it.
+    private func languageToggle(_ code: String, _ name: String) -> some View {
+        Toggle(name, isOn: Binding(
+            get: { voiceLanguages.contains(code) },
+            set: { on in
+                // In the rows' own order, whenever ticked: the Voice list's languages don't move as one is ticked again.
+                let list = shownLanguages.filter { $0 != code || on } + (on && !shownLanguages.contains(code) ? [code] : [])
+                let order = voiceLists.installedLanguages.map(\.code)
+                let sorted = list.sorted { (order.firstIndex(of: $0) ?? 0) < (order.firstIndex(of: $1) ?? 0) }
+                model.state["_voiceLanguages"] = sorted
+                model.set("speech", "voiceLanguages", sorted)
+            }))
+        .accessibilityLabel(name)
+    }
     /// One voice's tick in the rotor's list, named outright: SwiftUI left such switches nameless here (2 Nov 2026).
     private func rotorToggle(_ id: String, _ name: String) -> some View {
         Toggle(name, isOn: Binding(
@@ -322,6 +369,22 @@ struct SpeechView: View {
             let chosenVoice = model.special("_speechVoice") as? String ?? (model.get("speech", "voice") as? String ?? "")
             // Not for a voice the list doesn't offer (another language's): it couldn't be switched off.
             if rotorAll.contains(chosenVoice) { inRotor(chosenVoice) }
+            // The languages the Voice list and the rotor offer voices in (12 Nov 2026): until then only the Mac's own
+            // languages and English, so a voice in any other could never be the main voice. Folded, as the lists below, and straight
+            // after Voice, whose list it decides (Jakob Rosin, 12 Nov 2026: beside the other languages' switch, and named
+            // alike, the two could not be told apart).
+            let languagesTitle = String(localized: "Show languages in the Voice list: \(String(shownLanguages.count)) chosen", comment: "A switch in Speech settings: opens the list of languages whose voices the Voice list offers")
+            Toggle(languagesTitle, isOn: $showVoiceLanguages).accessibilityLabel(languagesTitle)
+            if showVoiceLanguages {
+                Text("The Voice list and the speech rotor offer the voices of the languages ticked here. The language of the voice in use is always offered.").font(.caption)
+                ForEach(voiceLists.installedLanguages, id: \.code) { language in
+                    if language.code == languageInUse {
+                        Text("\(language.name), always offered: the Mac voice in use speaks it.")
+                    } else {
+                        languageToggle(language.code, language.name)
+                    }
+                }
+            }
             Slider(value: model.percent("speech", "rate"), in: 10...100, step: 5) { Text("Rate") }
                 .accessibilityValue("\(Int(model.percent("speech", "rate").wrappedValue)) percent")
             Slider(value: model.percent("speech", "pitch"), in: 0...100, step: 5) { Text("Pitch") }
@@ -338,6 +401,21 @@ struct SpeechView: View {
                 Text("None").tag(0); Text("Some").tag(1); Text("Most").tag(2); Text("All").tag(3)
             }
             Toggle("Switch language when text says it is in another", isOn: model.bool("speech", "autoLanguageSwitching"))
+            // Folded until opened: a picker per language is the costliest part of the pane to draw (23 Oct 2026).
+            // Under the switch it belongs to, and only while that is on: off, these voices are never used (12 Nov 2026).
+            if model.bool("speech", "autoLanguageSwitching").wrappedValue {
+                Toggle("Show voices for language switching", isOn: $showLanguages).accessibilityLabel("Show voices for language switching")
+            }
+            if showLanguages, model.bool("speech", "autoLanguageSwitching").wrappedValue {
+                if otherLanguages.isEmpty {
+                    Text("No voices for other languages are installed.").font(.caption)
+                } else {
+                    Text("Text marked as another language is read in that language's voice, when language switching is on.").font(.caption)
+                    ForEach(otherLanguages, id: \.code) { language in
+                        OtherLanguageRow(language: language)
+                    }
+                }
+            }
             Picker("Where speech plays", selection: model.string("speech", "outputDevice", "")) {
                 Text("The Mac's default output").tag("")
                 ForEach(outputDevices, id: \.uid) { d in Text(d.name).tag(d.uid) }
@@ -352,18 +430,6 @@ struct SpeechView: View {
                         : String(localized: "\(Int(model.number("speech", "capitalPitch").wrappedValue)) percent", comment: "A slider's value"))
             }
             // The speech rotor's own short list (18 Oct 2026): none ticked, every voice.
-            // Folded until opened: a picker per language is the costliest part of the pane to draw (23 Oct 2026).
-            Toggle("Show voices for other languages", isOn: $showLanguages).accessibilityLabel("Show voices for other languages")
-            if showLanguages {
-                if otherLanguages.isEmpty {
-                    Text("No voices for other languages are installed.").font(.caption)
-                } else {
-                    Text("Text marked as another language is read in that language's voice, when language switching is on.").font(.caption)
-                    ForEach(otherLanguages, id: \.code) { language in
-                        OtherLanguageRow(language: language)
-                    }
-                }
-            }
             // Folded away: the list is long by nature (every voice the rotor could step through).
             let rotorTitle = rotorChosen.isEmpty ? String(localized: "Show the voices in the rotor: every voice", comment: "A switch in Speech settings")
                 : String(localized: "Show the voices in the rotor: \(String(rotorChosen.count)) chosen", comment: "A switch in Speech settings")
@@ -400,6 +466,9 @@ struct SpeechView: View {
                 }
             }
         }.formStyle(.grouped).navigationTitle("Speech")
+        // The Voice list follows the languages as TurnOver reports them: at first, after a tick, after another voice.
+        .onAppear { if model.special("_voiceLanguages") != nil { voiceLists.use(languages: voiceLanguages) } }
+        .onChange(of: voiceLanguages) { _, now in voiceLists.use(languages: now) }
     }
 }
 

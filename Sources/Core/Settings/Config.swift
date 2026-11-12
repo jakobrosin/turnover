@@ -173,6 +173,10 @@ public struct Config: Codable {
         /// The voices the speech rotor (VO-Command-Shift, voice) steps through, by identifier; empty, every voice of the
         /// Mac's languages (18 Oct 2026: "just Alex and Eddy… rather than wading through all the novelty ones").
         public var rotorVoices: [String] = []
+        /// The languages whose voices the Voice list and the speech rotor offer, by language code ("fi"); empty, the
+        /// Mac's own languages and English, as before this setting (Languages.voiceLanguages; 12 Nov 2026: a voice in
+        /// any other language could be chosen for language switching but never as the main voice).
+        public var voiceLanguages: [String] = []
         /// Bass, middle and treble in decibels, -12 to 12, for the voice in use (SpeechEQ; 2 Nov 2026).
         public var bass = 0.0, middle = 0.0, treble = 0.0
         /// Each voice's own rate, volume and EQ, by voice (a Mac voice's identifier, or "external:" and a natural
@@ -192,7 +196,7 @@ public struct Config: Codable {
         }
         public init() {}
         // Each field falls back to its default, so a setting added later never resets the voice and rate.
-        enum Keys: String, CodingKey { case voice, rate, symbolLevel, sayCapForCapitals, volume, autoLanguageSwitching, languageVoices, languageRates, outputDevice, capitalPitch, ducking, pitch, rotorVoices, bass, middle, treble, voiceTunings }
+        enum Keys: String, CodingKey { case voice, rate, symbolLevel, sayCapForCapitals, volume, autoLanguageSwitching, languageVoices, languageRates, outputDevice, capitalPitch, ducking, pitch, rotorVoices, voiceLanguages, bass, middle, treble, voiceTunings }
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: Keys.self)
             voice = (try? c.decodeIfPresent(String.self, forKey: .voice)) ?? voice
@@ -208,6 +212,7 @@ public struct Config: Codable {
             pitch = (try? c.decodeIfPresent(Float.self, forKey: .pitch)) ?? pitch
             ducking = (try? c.decodeIfPresent(String.self, forKey: .ducking)) ?? ducking
             rotorVoices = (try? c.decodeIfPresent([String].self, forKey: .rotorVoices)) ?? rotorVoices
+            voiceLanguages = (try? c.decodeIfPresent([String].self, forKey: .voiceLanguages)) ?? voiceLanguages
             bass = (try? c.decodeIfPresent(Double.self, forKey: .bass)) ?? bass
             middle = (try? c.decodeIfPresent(Double.self, forKey: .middle)) ?? middle
             treble = (try? c.decodeIfPresent(Double.self, forKey: .treble)) ?? treble
@@ -220,7 +225,7 @@ public struct Config: Codable {
             try c.encode(autoLanguageSwitching, forKey: .autoLanguageSwitching); try c.encode(languageVoices, forKey: .languageVoices)
             try c.encode(languageRates, forKey: .languageRates); try c.encode(outputDevice, forKey: .outputDevice)
             try c.encode(capitalPitch, forKey: .capitalPitch); try c.encode(ducking, forKey: .ducking); try c.encode(pitch, forKey: .pitch)
-            try c.encode(rotorVoices, forKey: .rotorVoices)
+            try c.encode(rotorVoices, forKey: .rotorVoices); try c.encode(voiceLanguages, forKey: .voiceLanguages)
             try c.encode(bass, forKey: .bass); try c.encode(middle, forKey: .middle); try c.encode(treble, forKey: .treble)
             try c.encode(voiceTunings, forKey: .voiceTunings)
         }

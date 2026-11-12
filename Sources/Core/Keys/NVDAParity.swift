@@ -478,7 +478,15 @@ enum SynthRing {
         switch s {
         case "voice":
             let id = KokoroVoice.speechVoiceID
-            return KokoroVoice.voiceEntries.first { $0.id == id }?.name ?? AVSpeechSynthesisVoice(identifier: id)?.name ?? id
+            if let natural = KokoroVoice.voiceEntries.first(where: { $0.id == id }) { return natural.name }
+            guard let voice = AVSpeechSynthesisVoice(identifier: id) else { return id }
+            // Your own languages chosen (Settings, Speech), and more than one: the language after the name, as one
+            // name can be several voices then (Eloquence's Reed has one in each of its languages). Otherwise the name alone, as before.
+            if !config.speech.voiceLanguages.isEmpty, Languages.offeredVoiceLanguages.count > 1 {
+                let language = Locale.current.localizedString(forIdentifier: voice.language) ?? voice.language
+                return String(localized: "\(voice.name), \(language)", comment: "A voice in the speech settings ring: its name, then its language")
+            }
+            return voice.name
         case "rate": return "\(Int((config.speech.rate * 100).rounded()))"
         case "pitch": return "\(Int((config.speech.pitch * 100).rounded()))"
         case "volume": return "\(config.speech.volume)"
@@ -503,11 +511,12 @@ enum SynthRing {
         }
     }
 
-    /// The Mac's voices in your languages and the natural ones (2 Nov 2026), as identifier and name.
+    /// The Mac's voices in your languages and the natural ones (2 Nov 2026), as identifier and name. Your languages
+    /// are the ones ticked in Settings, or the Mac's own and English (Languages.voiceLanguages, 12 Nov 2026).
     static func voices() -> [(id: String, name: String)] {
-        let wanted = Set(Locale.preferredLanguages.map { String($0.prefix(2)) } + ["en"])
+        let wanted = Set(Languages.offeredVoiceLanguages)
         // Not Apple's novelty voices (2 Nov 2026), as Settings leaves them out; the one in use stays.
-        let mac = AVSpeechSynthesisVoice.speechVoices().filter { wanted.contains(String($0.language.prefix(2))) && (!$0.voiceTraits.contains(.isNoveltyVoice) || $0.identifier == config.speech.voice) }
+        let mac = AVSpeechSynthesisVoice.speechVoices().filter { wanted.contains(Languages.base($0.language)) && (!$0.voiceTraits.contains(.isNoveltyVoice) || $0.identifier == config.speech.voice) }
             .sorted { $0.name < $1.name }
         let all = mac.map { (id: $0.identifier, name: $0.name) } + KokoroVoice.voiceEntries
         // Your own short list (Settings, Speech, Voices in the rotor), with the voice in use always among them.

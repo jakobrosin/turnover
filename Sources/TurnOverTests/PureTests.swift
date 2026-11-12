@@ -165,6 +165,21 @@ func pureTests() {
         check(a.count == 24 && !a.contains("wikipedia"), "a hash, not the address: \(a)")
         expect(BrowseModeHandler.shortURL("https://example.com/a/b?q=secret%20term"), "example.com/a/b")
     }
+    test("languages: the voice languages are the Mac's and English until some are chosen; the voice in use's stays") {
+        expect(Languages.voiceLanguages(chosen: [], preferred: ["et-EE", "en-US"], current: "en-GB"), ["et", "en"], "none chosen: the Mac's languages, English once")
+        expect(Languages.voiceLanguages(chosen: [], preferred: ["tr-TR"], current: nil), ["tr", "en"], "English is added to the Mac's languages")
+        expect(Languages.voiceLanguages(chosen: ["fi", "af"], preferred: ["en-US"], current: "fi-FI"), ["fi", "af"], "chosen: only those, the Mac's languages no longer added")
+        expect(Languages.voiceLanguages(chosen: ["fi"], preferred: ["en-US"], current: "en-US"), ["fi", "en"], "the voice in use keeps its language offered")
+        expect(Languages.voiceLanguages(chosen: [], preferred: ["en-US"], current: "fi-FI"), ["en", "fi"], "and with none chosen")
+        expect(Languages.voiceLanguages(chosen: ["fil", "FI_fi", "fi"], preferred: [], current: nil), ["fil", "fi"], "whole codes: Filipino isn't Finnish; one entry a language")
+    }
+    test("languages: the chosen voice languages survive the settings file, and an old file has none") {
+        var c = Config(); c.speech.voiceLanguages = ["fi", "af"]
+        let back = try? JSONDecoder().decode(Config.self, from: JSONEncoder().encode(c))
+        expect(back?.speech.voiceLanguages ?? [], ["fi", "af"], "written and read back")
+        let old = try? JSONDecoder().decode(Config.Speech.self, from: Data(#"{"rate": 0.5}"#.utf8))
+        expect(old?.voiceLanguages ?? ["?"], [], "a file from before the setting")
+    }
     test("languages: one Arabic letter goes to the Arabic voice, not the English voice's letter name") {
         let english = AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("en") }
         guard let english else { return }   // no English voice on this Mac: nothing to compare with
