@@ -25,6 +25,8 @@ public enum BuiltInModules {
         h.register(PreviewAppModule.self, for: PreviewAppModule.bundleID)
         h.register(KindleAppModule.self, for: KindleAppModule.bundleID)
         h.register(CalendarAppModule.self, for: CalendarAppModule.bundleID)
+        h.register(FantasticalAppModule.self, for: FantasticalAppModule.bundleID)
+        h.register(FantasticalAppModule.self, for: FantasticalAppModule.helperBundleID)
         h.register(PagesAppModule.self, for: PagesAppModule.bundleID)
         h.register(NumbersAppModule.self, for: NumbersAppModule.bundleID)
         h.register(KeynoteAppModule.self, for: KeynoteAppModule.bundleID)

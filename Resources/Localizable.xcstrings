@@ -500,47 +500,6 @@
         }
       }
     },
-    "%lld columns" : {
-      "comment" : "A table's size",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld sütun"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld столбец"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld столбца"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld столбцов"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld столбца"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%@ could not be removed: %@" : {
       "comment" : "A plugin not removed: %1$@ is its name, %2$@ the error",
       "localizations" : {
@@ -739,47 +698,6 @@
         }
       }
     },
-    "%lld hours" : {
-      "comment" : "A battery's time: hours",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld saat"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld час"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld часа"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld часов"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld часа"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%@ hours ago" : {
       "comment" : "When a notification came",
       "localizations" : {
@@ -793,47 +711,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ часов назад"
-          }
-        }
-      }
-    },
-    "%lld hours ago" : {
-      "comment" : "When a notification came",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld saat önce"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld час назад"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld часа назад"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld часов назад"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld часа назад"
-                }
-              }
-            }
           }
         }
       }
@@ -1359,47 +1236,6 @@
         }
       }
     },
-    "%lld minutes" : {
-      "comment" : "A battery's time: minutes",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld dakika"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минута"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минуты"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минут"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минуты"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%@ minutes ago" : {
       "comment" : "When a notification came",
       "localizations" : {
@@ -1413,47 +1249,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ минут назад"
-          }
-        }
-      }
-    },
-    "%lld minutes ago" : {
-      "comment" : "When a notification came",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld dakika önce"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минуту назад"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минуты назад"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минут назад"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld минуты назад"
-                }
-              }
-            }
           }
         }
       }
@@ -1942,47 +1737,6 @@
         }
       }
     },
-    "%lld rows" : {
-      "comment" : "A table's size",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld satır"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld строка"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld строки"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld строк"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld строки"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%@ seconds" : {
       "comment" : "A time\nBraille auto scroll's speed: %@ is seconds",
       "localizations" : {
@@ -1996,47 +1750,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ секунд"
-          }
-        }
-      }
-    },
-    "%lld seconds" : {
-      "comment" : "A time",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld saniye"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld секунда"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld секунды"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld секунд"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld секунды"
-                }
-              }
-            }
           }
         }
       }
@@ -2091,6 +1804,9 @@
           }
         }
       }
+    },
+    "%@ suggestions" : {
+      "comment" : "Fantastical's suggestions for the new event field"
     },
     "%@ tables" : {
       "comment" : "A count on a page",
@@ -2196,6 +1912,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ до %@"
+          }
+        }
+      }
+    },
+    "%@ to %@ %@" : {
+      "comment" : "An event's start time, and its end on another day",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@ %3$@"
           }
         }
       }
@@ -2442,53 +2169,6 @@
         }
       }
     },
-    "%@, %lld percent" : {
-      "comment" : "A download's progress: the app, then the percentage",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$lld percent"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@, yüzde %2$lld"
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld процент"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld процента"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld процентов"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld процента"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%@, %@ ratings" : {
       "comment" : "An app's rating in the catalog: %1$@ the stars, %2$@ how many ratings",
       "localizations" : {
@@ -2715,6 +2395,53 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@, %@. Delete отменяет загрузку."
+          }
+        }
+      }
+    },
+    "%@, %lld percent" : {
+      "comment" : "A download's progress: the app, then the percentage",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld percent"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, yüzde %2$lld"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld процент"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld процента"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld процентов"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld процента"
+                }
+              }
+            }
           }
         }
       }
@@ -3556,6 +3283,211 @@
         }
       }
     },
+    "%lld columns" : {
+      "comment" : "A table's size",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld sütun"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld столбец"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld столбца"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld столбцов"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld столбца"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld hours" : {
+      "comment" : "A battery's time: hours",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld saat"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld час"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld часа"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld часов"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld часа"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld hours ago" : {
+      "comment" : "When a notification came",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld saat önce"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld час назад"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld часа назад"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld часов назад"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld часа назад"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld minutes" : {
+      "comment" : "A battery's time: minutes",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld dakika"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минута"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минуты"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минут"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минуты"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld minutes ago" : {
+      "comment" : "When a notification came",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld dakika önce"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минуту назад"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минуты назад"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минут назад"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld минуты назад"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld percent" : {
       "localizations" : {
         "tr" : {
@@ -3589,6 +3521,88 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld процента"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld rows" : {
+      "comment" : "A table's size",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld satır"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld строка"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld строки"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld строк"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld строки"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld seconds" : {
+      "comment" : "A time",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld saniye"
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld секунда"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld секунды"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld секунд"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld секунды"
                 }
               }
             }
@@ -4003,6 +4017,9 @@
           }
         }
       }
+    },
+    "1 suggestion" : {
+      "comment" : "Fantastical's suggestions for the new event field"
     },
     "1 table" : {
       "comment" : "A count on a page",
@@ -4627,6 +4644,9 @@
           }
         }
       }
+    },
+    "Added: %@" : {
+      "comment" : "Fantastical added the new event: %@ is the event in a line"
     },
     "After Return clicks something, recognise again" : {
       "localizations" : {
@@ -6309,6 +6329,9 @@
         }
       }
     },
+    "Closes the event's details, back to the event" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
     "Closes the window (VO-Command-Escape)" : {
       "comment" : "A command, as the key list and keyboard help say it",
       "localizations" : {
@@ -7168,6 +7191,9 @@
         }
       }
     },
+    "Could not select this event in Fantastical. Nothing was deleted." : {
+      "comment" : "Delete in Fantastical: the event could not be selected first"
+    },
     "Could not start %@: %@" : {
       "comment" : "An AI tool could not start: its name, then why",
       "localizations" : {
@@ -7500,6 +7526,9 @@
           }
         }
       }
+    },
+    "Deletes the event you are on; Fantastical asks first" : {
+      "comment" : "A command, as the key list and keyboard help say it"
     },
     "Deletes the tab stop on a ruler (VO-Backspace)" : {
       "comment" : "A command, as the key list and keyboard help say it",
@@ -8881,6 +8910,9 @@
         }
       }
     },
+    "Fix an item yourself: Fix the item I'm on, in Help improve this app, gives it a name or a key. With VoiceOver keys, VO-Slash does the same. Share your fix, and everyone who uses that app gets it." : {
+      "comment" : "Help make TurnOver: fixing an item"
+    },
     "Fix the item I'm on" : {
       "localizations" : {
         "tr" : {
@@ -9968,6 +10000,9 @@
         }
       }
     },
+    "Help make TurnOver" : {
+      "comment" : "The title of the page about the ways to help TurnOver (a welcome page, and an item in the TurnOver menu's Help)"
+    },
     "Help text" : {
       "comment" : "A piece of an item's announcement, in the reading order",
       "localizations" : {
@@ -10150,6 +10185,9 @@
         }
       }
     },
+    "If you've found Discord hard going, it reads better with TurnOver on the Mac." : {
+      "comment" : "Help make TurnOver: Discord reads better with TurnOver"
+    },
     "Ignore" : {
       "localizations" : {
         "tr" : {
@@ -10250,6 +10288,9 @@
           }
         }
       }
+    },
+    "In a new event's details: adds the event and says what was added" : {
+      "comment" : "A command, as the key list and keyboard help say it"
     },
     "In a page's own menu: moves through its items or presses one" : {
       "comment" : "A command, as the key list and keyboard help say it",
@@ -10489,6 +10530,15 @@
         }
       }
     },
+    "In an event's details: presses the control you are on" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "In an event's details: the next control" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "In an event's details: the previous control" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
     "In edit fields" : {
       "localizations" : {
         "tr" : {
@@ -10640,6 +10690,18 @@
           }
         }
       }
+    },
+    "In the new event field: adds the event and says what was added; on a suggestion, takes it" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "In the new event field: says what Fantastical has understood, without adding it" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "In the new event field: the next suggestion" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "In the new event field: the previous suggestion" : {
+      "comment" : "A command, as the key list and keyboard help say it"
     },
     "In the ribbon, sidebar, status bar or toolbar: back to the document" : {
       "comment" : "A command, as the key list and keyboard help say it",
@@ -14922,6 +14984,9 @@
         }
       }
     },
+    "No event to delete: Down arrow to an event first" : {
+      "comment" : "Delete pressed in Fantastical's month view on a day, not an event"
+    },
     "No item to change here" : {
       "comment" : "Spoken message",
       "localizations" : {
@@ -15447,6 +15512,9 @@
         }
       }
     },
+    "Nothing understood yet" : {
+      "comment" : "Fantastical's new event field has no event worked out"
+    },
     "Notification Centre" : {
       "comment" : "Spoken message\nThe Mac's Notification Centre",
       "localizations" : {
@@ -15849,6 +15917,12 @@
           }
         }
       }
+    },
+    "Open TurnOver on GitHub" : {
+      "comment" : "The button on the Help make TurnOver page"
+    },
+    "Open TurnOver on GitHub, below, to make a start. This page is in the TurnOver menu, under Help, as Help make TurnOver." : {
+      "comment" : "Help make TurnOver: the last line, before the buttons"
     },
     "Open the log; writes the navigator object's details to the log and opens the log (NVDA+F1)" : {
       "comment" : "A command, as the key list and keyboard help say it",
@@ -22021,6 +22095,9 @@
         }
       }
     },
+    "Something wrong in one app: This app, then Help improve this app, in the TurnOver menu. A form opens, already filled in for that app." : {
+      "comment" : "Help make TurnOver: reporting a problem with an app"
+    },
     "Sounds" : {
       "comment" : "A section of the Settings window",
       "localizations" : {
@@ -23362,6 +23439,12 @@
         }
       }
     },
+    "Talk with other people who use TurnOver on its Discord, at %@." : {
+      "comment" : "Help make TurnOver: the Discord server; the argument is its address"
+    },
+    "Teach TurnOver a whole app with your own AI assistant, such as Claude Code or Codex. Help improve this app starts it for you." : {
+      "comment" : "Help make TurnOver: building an app's module with an AI assistant"
+    },
     "Tell the project what's wrong, build %@'s module with your AI or by hand, or ask for something TurnOver needs" : {
       "localizations" : {
         "tr" : {
@@ -23377,6 +23460,9 @@
           }
         }
       }
+    },
+    "Tell us how it's going, good or bad: Tools, then Send feedback, in the TurnOver menu. A sentence is enough." : {
+      "comment" : "Help make TurnOver: feedback"
     },
     "Tell us what's wrong in %@" : {
       "localizations" : {
@@ -25208,6 +25294,7 @@
         }
       }
     },
+    "The ways to help, from telling us what works to writing code, and TurnOver on GitHub" : {},
     "The welcome pages" : {
       "localizations" : {
         "tr" : {
@@ -25682,6 +25769,9 @@
           }
         }
       }
+    },
+    "Translate TurnOver into your language. The Turkish and Russian translations came from people who use it." : {
+      "comment" : "Help make TurnOver: translating"
     },
     "Travel time" : {
       "comment" : "A field of a Calendar event",
@@ -26289,6 +26379,9 @@
           }
         }
       }
+    },
+    "TurnOver is free and open source. It gets better when the people who use it say what works and what doesn't." : {
+      "comment" : "Help make TurnOver: the first line"
     },
     "TurnOver is free, made in spare time; a tip on Ko-fi helps cover its running costs. No account needed" : {
       "localizations" : {
@@ -28915,6 +29008,9 @@
         }
       }
     },
+    "Write code: TurnOver is on GitHub, and CONTRIBUTING.md there is the place to start." : {
+      "comment" : "Help make TurnOver: contributing code"
+    },
     "Writing a message: Command Shift D sends it, and says so" : {
       "comment" : "A command, as the key list and keyboard help say it",
       "localizations" : {
@@ -29201,6 +29297,9 @@
           }
         }
       }
+    },
+    "alert %@" : {
+      "comment" : "A new Fantastical event's alert: %@ is Fantastical's own words, 15 minutes before"
     },
     "aligned %@" : {
       "comment" : "Paragraph alignment: %@ is how",
@@ -30245,6 +30344,9 @@
           }
         }
       }
+    },
+    "calendar %@" : {
+      "comment" : "The calendar a new Fantastical event goes in: %@ is its name"
     },
     "can't be moved" : {
       "comment" : "Spoken message",
@@ -35418,17 +35520,6 @@
         }
       }
     },
-    "next track" : {
-      "comment" : "Spotify next track shortcut",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "следующий трек"
-          }
-        }
-      }
-    },
     "next item" : {
       "comment" : "A braille chord's command, as braille help says it",
       "localizations" : {
@@ -35459,6 +35550,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "следующая строка или следующий элемент списка, озвучивается"
+          }
+        }
+      }
+    },
+    "next track" : {
+      "comment" : "Spotify next track shortcut",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "следующий трек"
           }
         }
       }
@@ -38600,17 +38702,6 @@
         }
       }
     },
-    "previous track" : {
-      "comment" : "Spotify previous track shortcut",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "предыдущий трек"
-          }
-        }
-      }
-    },
     "previous item" : {
       "comment" : "A braille chord's command, as braille help says it",
       "localizations" : {
@@ -38641,6 +38732,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "предыдущая строка или предыдущий элемент списка, озвучивается"
+          }
+        }
+      }
+    },
+    "previous track" : {
+      "comment" : "Spotify previous track shortcut",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "предыдущий трек"
           }
         }
       }
@@ -42524,6 +42626,9 @@
         }
       }
     },
+    "task" : {
+      "comment" : "Fantastical's new item is a task, not an event"
+    },
     "terminal" : {
       "comment" : "A role, spoken after an item's name",
       "localizations" : {
@@ -44265,43 +44370,6 @@
           }
         }
       }
-    },
-    "Fix an item yourself: Fix the item I'm on, in Help improve this app, gives it a name or a key. With VoiceOver keys, VO-Slash does the same. Share your fix, and everyone who uses that app gets it." : {
-      "comment" : "Help make TurnOver: fixing an item"
-    },
-    "Help make TurnOver" : {
-      "comment" : "The title of the page about the ways to help TurnOver (a welcome page, and an item in the TurnOver menu's Help)"
-    },
-    "If you've found Discord hard going, it reads better with TurnOver on the Mac." : {
-      "comment" : "Help make TurnOver: Discord reads better with TurnOver"
-    },
-    "Open TurnOver on GitHub" : {
-      "comment" : "The button on the Help make TurnOver page"
-    },
-    "Open TurnOver on GitHub, below, to make a start. This page is in the TurnOver menu, under Help, as Help make TurnOver." : {
-      "comment" : "Help make TurnOver: the last line, before the buttons"
-    },
-    "Something wrong in one app: This app, then Help improve this app, in the TurnOver menu. A form opens, already filled in for that app." : {
-      "comment" : "Help make TurnOver: reporting a problem with an app"
-    },
-    "Talk with other people who use TurnOver on its Discord, at %@." : {
-      "comment" : "Help make TurnOver: the Discord server; the argument is its address"
-    },
-    "Teach TurnOver a whole app with your own AI assistant, such as Claude Code or Codex. Help improve this app starts it for you." : {
-      "comment" : "Help make TurnOver: building an app's module with an AI assistant"
-    },
-    "Tell us how it's going, good or bad: Tools, then Send feedback, in the TurnOver menu. A sentence is enough." : {
-      "comment" : "Help make TurnOver: feedback"
-    },
-    "The ways to help, from telling us what works to writing code, and TurnOver on GitHub" : {},
-    "Translate TurnOver into your language. The Turkish and Russian translations came from people who use it." : {
-      "comment" : "Help make TurnOver: translating"
-    },
-    "TurnOver is free and open source. It gets better when the people who use it say what works and what doesn't." : {
-      "comment" : "Help make TurnOver: the first line"
-    },
-    "Write code: TurnOver is on GitHub, and CONTRIBUTING.md there is the place to start." : {
-      "comment" : "Help make TurnOver: contributing code"
     }
   },
   "version" : "1.0"

@@ -40,6 +40,7 @@ Run `python3 Tools/build-app-index.py` after editing app records or documentatio
 - [Contacts](Contacts/STATUS.md) — Effort: Module; being worked on: Unclaimed.
 - [Cyberduck](Cyberduck/STATUS.md) — Effort: None; being worked on: Unclaimed.
 - [Discord](Discord/STATUS.md) — Effort: Module; being worked on: Unclaimed.
+- [Fantastical](Fantastical/STATUS.md) — Effort: Module; being worked on: Unclaimed.
 - [Finder](Finder/STATUS.md) — Effort: Module; being worked on: Unclaimed.
 - [Freeform](Freeform/STATUS.md) — Effort: Module; being worked on: Unclaimed.
 - [Home](Home/STATUS.md) — Effort: None; being worked on: Unclaimed.

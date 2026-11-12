@@ -165,6 +165,35 @@ func pureTests() {
         check(a.count == 24 && !a.contains("wikipedia"), "a hash, not the address: \(a)")
         expect(BrowseModeHandler.shortURL("https://example.com/a/b?q=secret%20term"), "example.com/a/b")
     }
+    test("fantastical: a day's date is its sentence without the count and weather; an event drops the date its day said") {
+        expect(FantasticalAppModule.dateLabel("Thursday, 12. November 2026, 5 events, Sleet, High 6°, Low 1°"), "Thursday, 12. November 2026", "count and weather")
+        expect(FantasticalAppModule.dateLabel("Saturday, 7. November 2026, No Events"), "Saturday, 7. November 2026", "an empty day")
+        expect(FantasticalAppModule.dateLabel("Tuesday, 3. November 2026, 1 event"), "Tuesday, 3. November 2026", "one event")
+        expect(FantasticalAppModule.dateLabel("Monday, November 2, 2026, 2 events"), "Monday, November 2, 2026", "the American order")
+        expect(FantasticalAppModule.dateLabel("Montag, 2. November 2026"), "Montag, 2. November 2026", "no count found: the whole sentence")
+        expect(FantasticalAppModule.dateLabel("Monday, 9. November 2026, No All Day Events"), "Monday, 9. November 2026", "the week view's all-day row, empty")
+        expect(FantasticalAppModule.dateLabel("Tuesday, 10. November 2026, 1 all day events"), "Tuesday, 10. November 2026", "and with one")
+        check(FantasticalAppModule.isHeading("CONTACTS") && !FantasticalAppModule.isHeading("Ann Example, ann@example.com") && !FantasticalAppModule.isHeading("ANN@EXAMPLE.COM"), "a suggestion list's heading is not a suggestion")
+        expect(FantasticalAppModule.dateAlone("Thursday, 12. November 2026"), "12. November 2026")
+        expect(FantasticalAppModule.dateAlone("Monday, November 2, 2026"), "November 2, 2026")
+        let day = "12. November 2026"
+        expect(FantasticalAppModule.brief("Team meeting, from 12. November 2026 at 10:00 to 11:00, Room 2, Work", dayDate: day), "Team meeting, from 10:00 to 11:00, Room 2, Work", "a timed event")
+        expect(FantasticalAppModule.brief("Holiday, 12. November 2026, all-day, Holidays", dayDate: day), "Holiday, all day, Holidays", "an all-day event")
+        let long = "Conference, from 11. November 2026 to 13. November 2026, all-day, Work"
+        expect(FantasticalAppModule.brief(long, dayDate: day), long, "several days: Fantastical's own sentence")
+    }
+    test("fantastical: a new event in a line: the day, the times, the calendar and the alert; no alert when there is none") {
+        let gb = Locale(identifier: "en_GB"), utc = TimeZone(identifier: "UTC")!
+        let start = Date(timeIntervalSince1970: 1_794_582_000)   // Friday 13 November 2026, 15:00 UTC
+        let line = { (allDay: Bool, end: TimeInterval, task: Bool, location: String, alert: String) -> String in
+            FantasticalAppModule.summary(title: "Lunch", task: task, allDay: allDay, start: start, end: start.addingTimeInterval(end), location: location, calendar: "Work", alert: alert, locale: gb, timeZone: utc)
+        }
+        expect(line(false, 2700, false, "", "15 minutes before"), "Lunch, Friday 13 November, 15:00 to 15:45, calendar Work, alert 15 minutes before", "a timed event")
+        expect(line(false, 2700, false, "Room 2", "None"), "Lunch, Friday 13 November, 15:00 to 15:45, Room 2, calendar Work", "a place, no alert")
+        expect(line(true, 0, false, "", "None"), "Lunch, Friday 13 November, all day, calendar Work", "all day")
+        expect(line(true, 86400, false, "", "None"), "Lunch, Friday 13 November to Saturday 14 November, all day, calendar Work", "two days")
+        expect(line(false, 0, true, "", "None"), "Lunch, task, Friday 13 November, 15:00, calendar Work", "a task with a time")
+    }
     test("languages: one Arabic letter goes to the Arabic voice, not the English voice's letter name") {
         let english = AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("en") }
         guard let english else { return }   // no English voice on this Mac: nothing to compare with
