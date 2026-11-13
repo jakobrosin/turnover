@@ -194,6 +194,14 @@ func pureTests() {
         expect(line(true, 86400, false, "", "None"), "Lunch, Friday 13 November to Saturday 14 November, all day, calendar Work", "two days")
         expect(line(false, 0, true, "", "None"), "Lunch, task, Friday 13 November, 15:00, calendar Work", "a task with a time")
     }
+    test("fantastical: a day with more events than fit draws all but the last that fits, which is its \"more\" line") {
+        let day = CGRect(x: 584, y: 176.5, width: 136, height: 118)   // as recorded, 13 Nov 2026
+        let row = { (i: Int) -> CGRect? in CGRect(x: 586, y: 207.5 + Double(i) * 20, width: 132, height: 19) }
+        expect(FantasticalAppModule.drawnCount(day: day, events: (0..<6).map(row)), 3, "six events, four lines: three drawn")
+        expect(FantasticalAppModule.drawnCount(day: day, events: (0..<4).map(row)), 4, "four fit: all drawn")
+        expect(FantasticalAppModule.drawnCount(day: day, events: (0..<2).map(row)), 2)
+        expect(FantasticalAppModule.drawnCount(day: nil, events: (0..<6).map(row)), 6, "no frame: taken as drawn")
+    }
     test("fantastical: go to date: the parts in the region's order, the part that changed, and its words") {
         typealias F = FantasticalAppModule
         check(F.dateParts(format: "d. MMMM y") == [.day, .month, .year], "Estonian: day, month, year")

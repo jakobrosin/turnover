@@ -21,6 +21,7 @@ Fantastical 4 in English, with a calendar that has some events. Use a test calen
 9. Return on an event: its popover opens on the title. Tab: the next control, round to the first after the last. The four date and time controls come as start date, start time, end date, end time, and the time controls say a time only.
 10. Return or Space on a pop-up button or a checkbox there: it is pressed.
 11. Escape: the popover closes and the event is said again.
+11a. In the month view, on a day with more events than its box shows (six, say): Return on the last of them opens its popover all the same, by way of the day view; Escape closes it, the month view is back, and the event is said again.
 12. Delete on an event: Fantastical asks about that event, and no other. Delete on a day with no event chosen: nothing is deleted, and TurnOver says so.
 
 ## A new event (Command N)

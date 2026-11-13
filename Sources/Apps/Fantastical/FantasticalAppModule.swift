@@ -48,6 +48,9 @@ public final class FantasticalAppModule: AppModule {
     private var opened = Opened.no
     /// Go to Date's field: which part of the date the keyboard is on (its place in the field), and the date last known.
     private var datePart = 0
+    /// An event opened by way of the day view: the view to go back to when its popover closes (its place among the
+    /// toolbar's view buttons).
+    private var returnView: Int?
     private var dateKnown: Date?
 
     public required init(pid: pid_t, bundleIdentifier: String, appName: String) {
@@ -395,8 +398,70 @@ public final class FantasticalAppModule: AppModule {
         Tones.press()
         opened = .waiting
         lastOwnMove = Date()
-        _ = AXUIElementPerformAction(events(day)[i], kAXPressAction as CFString)
-        enterPopover()
+        let event = events(day)[i], words = Self.text(of: event)
+        // A day in the month grid with more events than fit draws the first few and a "more" line, and an event
+        // it hasn't drawn takes no press: nothing opened, with nothing said (Jakob, 13 Nov 2026: the fourth of six
+        // on a day of 118 points; its frame is as good as the others'). Those open by way of the day view.
+        let drawn = monthArea() == nil || i < Self.drawnCount(day: Self.frame(day.element), events: events(day).map { Self.frame($0) })
+        if drawn {
+            _ = AXUIElementPerformAction(event, kAXPressAction as CFString)
+            if enterPopover(limit: 1.5) { return }
+        }
+        if monthArea() != nil, openThroughDayView(day, words: words) { return }
+        opened = .no
+        Tones.edge(); Log.io("fantastical: no popover after the press")
+    }
+
+    /// How many of a day's events the month grid draws: all of them when they fit in the day's box; otherwise the
+    /// ones that fit less one, whose line says how many more there are.
+    nonisolated public static func drawnCount(day: CGRect?, events: [CGRect?]) -> Int {
+        guard let day else { return events.count }
+        let fitting = events.prefix { $0.map { $0.maxY <= day.maxY + 1 } ?? true }.count
+        return fitting == events.count ? fitting : max(0, fitting - 1)
+    }
+
+    /// The toolbar's view buttons: Day, Week, Month, Quarter, Year, in that order (by their place, not their words).
+    private func viewButtons() -> [AXUIElement] {
+        guard let w = window(), let bar = Self.find(in: w, depth: 2, { $0.role == "AXToolbar" }) else { return [] }
+        let groups = bar.elements(kAXChildrenAttribute).filter { $0.role == "AXRadioGroup" }.map { $0.elements(kAXChildrenAttribute) }
+        return groups.first { $0.count == 5 } ?? []
+    }
+
+    /// Pressing a day selects it, and the day view then shows that day with every event of it, each of which takes
+    /// a press (checked with the key driver, 13 Nov 2026). The popover opens there; closing it comes back.
+    private func openThroughDayView(_ day: Day, words: String) -> Bool {
+        let buttons = viewButtons()
+        guard buttons.count == 5, let was = buttons.firstIndex(where: { ($0.attr(kAXValueAttribute) as? NSNumber)?.intValue == 1 }), was != 0 else { return false }
+        Log.io("fantastical: the event isn't drawn in the grid; opening it by way of the day view")
+        _ = AXUIElementPerformAction(day.element, kAXPressAction as CFString)
+        _ = AXUIElementPerformAction(buttons[0], kAXPressAction as CFString)
+        lastOwnMove = Date()
+        returnView = was
+        var event: AXUIElement?
+        _ = Poll.pumping(every: 0.1, limit: 2.0) {
+            guard let areas = self.columnAreas() else { return false }
+            event = self.columnEvents(day, in: areas).first { Self.text(of: $0) == words }
+            return event != nil
+        }
+        lastOwnMove = Date()
+        if let event {
+            _ = AXUIElementPerformAction(event, kAXPressAction as CFString)
+            if enterPopover(limit: 2.0) { return true }
+        }
+        restoreView()
+        return false
+    }
+
+    /// Back to the view an event was opened from.
+    private func restoreView() {
+        guard let i = returnView else { return }
+        returnView = nil
+        let buttons = viewButtons()
+        guard buttons.indices.contains(i) else { return }
+        _ = AXUIElementPerformAction(buttons[i], kAXPressAction as CFString)
+        lastOwnMove = Date()
+        _ = Poll.pumping(every: 0.1, limit: 1.5) { self.monthArea() != nil }
+        lastOwnMove = Date()
     }
 
     private func deleteEvent(_ g: KeyboardGesture) {
@@ -479,12 +544,8 @@ public final class FantasticalAppModule: AppModule {
     /// The pressed event's popover opens (AXCreated, 17 ms after the press) but Fantastical leaves the keyboard on the
     /// month view, so nothing was said and the popover couldn't be read (12 Nov 2026: "Enter on an event doesn't
     /// work"). TurnOver goes into it itself: its first control is given the focus and read.
-    private func enterPopover() {
-        guard Poll.pumping(every: 0.15, limit: 1.5, { self.openPopover() != nil }), let box = openPopover() else {
-            opened = .no
-            Tones.edge(); Log.io("fantastical: no popover after the press")
-            return
-        }
+    @discardableResult private func enterPopover(limit: TimeInterval) -> Bool {
+        guard Poll.pumping(every: 0.15, limit: limit, { self.openPopover() != nil }), let box = openPopover() else { return false }
         var parts: [AXUIElement] = []
         var seen = 0
         func walk(_ e: AXUIElement) {
@@ -498,6 +559,7 @@ public final class FantasticalAppModule: AppModule {
         let first = parts.first { ($0.attr(kAXEnabledAttribute) as? Bool) != false } ?? parts.first ?? box
         _ = first.set(kAXFocusedAttribute, kCFBooleanTrue)
         AXHandler.shared.focusChanged(first, pid: pid)
+        return true
     }
 
     /// The controls Tab stops on.
@@ -592,6 +654,7 @@ public final class FantasticalAppModule: AppModule {
         _ = Poll.pumping(every: 0.15, limit: 0.9) { self.openPopover() == nil }
         opened = .no
         lastOwnMove = Date()
+        restoreView()
         if let area = monthArea() ?? columnAreas()?["timed events"] { AXHandler.shared.focusChanged(area, pid: pid) }
         sayEvent()
     }
@@ -629,7 +692,7 @@ public final class FantasticalAppModule: AppModule {
             if opened == .showing {
                 opened = .no
                 lastOwnMove = Date()
-                DispatchQueue.main.async { [weak self] in self?.sayEvent() }
+                DispatchQueue.main.async { [weak self] in self?.restoreView(); self?.sayEvent() }
                 return
             }
             if event.kind == .gainFocus, Self.isMonthView(event.obj.element) || Self.isColumnArea(event.obj.element) {
