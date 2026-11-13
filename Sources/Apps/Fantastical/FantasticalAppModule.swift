@@ -427,7 +427,14 @@ public final class FantasticalAppModule: AppModule {
         // Where it was found on 12 Nov 2026: a child of the week's group in the month view, beside that week's days.
         if let area = monthArea() {
             for week in area.elements(kAXChildrenAttribute) where week.role == "AXGroup" {
-                if let box = week.elements(kAXChildrenAttribute).first(where: { $0.role == "AXPopover" }) { return box }
+                if let box = week.elements(kAXChildrenAttribute).first(where: Self.isEventPopover) { return box }
+            }
+        }
+        // In the week and day views: in one of their three areas, or under a day's group there.
+        for area in (columnAreas() ?? [:]).values {
+            for child in area.elements(kAXChildrenAttribute) {
+                if Self.isEventPopover(child) { return child }
+                if child.role == "AXGroup", let box = child.elements(kAXChildrenAttribute).first(where: Self.isEventPopover) { return box }
             }
         }
         let app = AXUIElementCreateApplication(pid)
@@ -437,12 +444,24 @@ public final class FantasticalAppModule: AppModule {
             let e = queue.removeFirst(); seen += 1
             let role = e.role
             if role == "AXPopover" {
-                return e
+                if Self.isEventPopover(e) { return e }
+                continue
             }
             if role == "AXMenuBar" || role == "AXStaticText" && e.elements(kAXChildrenAttribute).isEmpty { continue }
             queue.append(contentsOf: e.elements(kAXChildrenAttribute))
         }
         return nil
+    }
+
+    /// An event's own popover: the one with "Event details" in it and no sentence field. Not any popover: once
+    /// notifications have been shown, their popover stays in the window's toolbar though closed, and was taken for the
+    /// event's wherever the first look came up empty. In the week view Return went into the notifications, and Delete
+    /// was refused, its title never found (13 Nov 2026).
+    private static func isEventPopover(_ e: AXUIElement) -> Bool {
+        guard e.role == "AXPopover" else { return false }
+        let children = e.elements(kAXChildrenAttribute)
+        guard children.contains(where: { $0.role == "AXScrollArea" && $0.string(kAXDescriptionAttribute) == "Event details" }) else { return false }
+        return find(in: e, depth: 2, { $0.string(kAXIdentifierAttribute) == entryField }) == nil
     }
     /// The pressed event's popover opens (AXCreated, 17 ms after the press) but Fantastical leaves the keyboard on the
     /// month view, so nothing was said and the popover couldn't be read (12 Nov 2026: "Enter on an event doesn't
