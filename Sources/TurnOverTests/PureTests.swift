@@ -211,6 +211,7 @@ func pureTests() {
         expect(F.partWords(.day, of: day(2026, 11, 14), calendar: cal, locale: gb), "day 14")
         expect(F.partWords(.month, of: day(2026, 11, 14), calendar: cal, locale: gb), "month November")
         expect(F.partWords(.year, of: day(2026, 11, 14), calendar: cal, locale: gb), "year 2026", "no thousands separator")
+        expect(F.changeWords(.month, of: day(2026, 12, 14), whole: "Monday, 14 December 2026", calendar: cal, locale: gb), "December, Monday, 14 December 2026", "a change: the new value first")
     }
     test("languages: one Arabic letter goes to the Arabic voice, not the English voice's letter name") {
         let english = AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("en") }

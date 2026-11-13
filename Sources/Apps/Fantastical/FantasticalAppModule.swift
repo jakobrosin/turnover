@@ -609,7 +609,17 @@ public final class FantasticalAppModule: AppModule {
             if event.kind == .gainFocus { datePart = InputManager.lastKeyIdentifier.hasSuffix("shift+tab") ? max(0, parts.count - 1) : 0 }
             // The part that changed is the part the keyboard is on, whatever was counted (a click moves it too).
             if event.kind == .valueChange, let before = dateKnown, let now, let changed = Self.changedPart(from: before, to: now, calendar: .current),
-               let i = parts.firstIndex(of: changed) { datePart = i }
+               let i = parts.firstIndex(of: changed) {
+                datePart = i
+                dateKnown = now
+                // The new value first, then the date it makes ("15, Sunday, 15. November 2026"): the value is the
+                // news, and the whole date took too long to get to it (Jakob, 13 Nov 2026).
+                if API.focusObject?.element.isSame(event.obj.element) == true {
+                    let f = DateFormatter(); f.dateStyle = .full; f.timeStyle = .none
+                    Speech.speakMessage(Self.changeWords(changed, of: now, whole: f.string(from: now), calendar: .current, locale: .current))
+                    return
+                }
+            }
             dateKnown = now
         }
         if [.gainFocus, .focusEntered].contains(event.kind), event.obj.pid == pid, inArea(event.obj.element) {
@@ -709,16 +719,31 @@ public final class FantasticalAppModule: AppModule {
         }
     }
 
-    /// "day 14", "month November", "year 2026".
-    nonisolated public static func partWords(_ part: DatePart, of date: Date, calendar: Calendar, locale: Locale) -> String {
+    /// A part's value alone: "14", "November", "2026".
+    nonisolated public static func partValue(_ part: DatePart, of date: Date, calendar: Calendar, locale: Locale) -> String {
         let c = calendar.dateComponents([.year, .month, .day], from: date)
         switch part {
-        case .day: return String(localized: "day \(String(c.day ?? 0))", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        case .day: return String(c.day ?? 0)
         case .month:
             let f = DateFormatter(); f.locale = locale; f.calendar = calendar; f.timeZone = calendar.timeZone; f.dateFormat = "LLLL"
-            return String(localized: "month \(f.string(from: date))", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
-        case .year: return String(localized: "year \(String(c.year ?? 0))", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+            return f.string(from: date)
+        case .year: return String(c.year ?? 0)
         }
+    }
+
+    /// "day 14", "month November", "year 2026".
+    nonisolated public static func partWords(_ part: DatePart, of date: Date, calendar: Calendar, locale: Locale) -> String {
+        let value = partValue(part, of: date, calendar: calendar, locale: locale)
+        switch part {
+        case .day: return String(localized: "day \(value)", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        case .month: return String(localized: "month \(value)", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        case .year: return String(localized: "year \(value)", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        }
+    }
+
+    /// A change: the part's new value, then the whole date ("15, Sunday, 15. November 2026").
+    nonisolated public static func changeWords(_ part: DatePart, of date: Date, whole: String, calendar: Calendar, locale: Locale) -> String {
+        String(localized: "\(partValue(part, of: date, calendar: calendar, locale: locale)), \(whole)", comment: "Go to Date in Fantastical, after a change: the changed part's new value, then the whole date")
     }
 
     // MARK: The new event field
