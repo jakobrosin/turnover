@@ -443,7 +443,7 @@ public final class FantasticalAppModule: AppModule {
             guard let self, request == self.openRequest, self.opened == .waiting else { return }
             // Nothing more is done, and no key sent, once the person has gone elsewhere: a key sent now would be
             // another app's, or another part of this one's.
-            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == self.pid, self.inView() else {
+            guard self.inFront, self.inView() else {
                 self.opened = .no
                 Log.io("fantastical: the details weren't seen to open, and the keyboard has moved on; left at that")
                 return
@@ -465,6 +465,9 @@ public final class FantasticalAppModule: AppModule {
             Speech.speakMessage(String(localized: "Could not open this event", comment: "Return on an event in Fantastical, and its details didn't open"))
         }
     }
+
+    /// Fantastical is the app in front: asked before any key is sent that the person didn't just press.
+    private var inFront: Bool { NSWorkspace.shared.frontmostApplication?.processIdentifier == pid }
 
     /// The keyboard itself on the view. After another app was in front Fantastical has it nowhere in the window (it
     /// names no focused element), and then Return, Delete and Escape are nobody's: an open popover stayed open under
@@ -504,12 +507,19 @@ public final class FantasticalAppModule: AppModule {
         if !Poll.pumping(every: 0.1, limit: 0.8, named) {
             // An event the grid hasn't drawn is selected by the press and shows no details: Get Info shows the
             // selected event's. Only with nothing open, for Get Info closes details that are.
-            if openPopover() == nil {
+            if openPopover() == nil, inFront {
                 Log.io("fantastical: no details after the press; Get Info is sent to see what is selected")
                 KeyboardGesture(identifier: "kb:command+i")?.send()
                 lastOwnMove = Date()
             }
             _ = Poll.pumping(every: 0.1, limit: 1.2, named)
+        }
+        // The waits above are long enough for another app to have come to the front, and a key sent then would be
+        // that app's: Command Delete is Move to Trash in Finder.
+        guard inFront else {
+            Log.io("fantastical: delete not sent: another app is in front")
+            deselect()
+            return
         }
         guard !title.isEmpty, words.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(title) else {
             Tones.edge(); Log.io("fantastical: delete not sent: the event's details didn't open or name another event (title \(title.count) characters, event \(words.count))")
