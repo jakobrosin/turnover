@@ -194,6 +194,24 @@ func pureTests() {
         expect(line(true, 86400, false, "", "None"), "Lunch, Friday 13 November to Saturday 14 November, all day, calendar Work", "two days")
         expect(line(false, 0, true, "", "None"), "Lunch, task, Friday 13 November, 15:00, calendar Work", "a task with a time")
     }
+    test("fantastical: go to date: the parts in the region's order, the part that changed, and its words") {
+        typealias F = FantasticalAppModule
+        check(F.dateParts(format: "d. MMMM y") == [.day, .month, .year], "Estonian: day, month, year")
+        check(F.dateParts(format: "MMMM d, y") == [.month, .day, .year], "American: month, day, year")
+        check(F.dateParts(format: "y. MMMM d.") == [.year, .month, .day], "Hungarian: year, month, day")
+        check(F.dateParts(format: "d 'de' MMMM 'de' y") == [.day, .month, .year], "quoted words are not parts")
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
+        let day = { (y: Int, m: Int, d: Int) in cal.date(from: DateComponents(year: y, month: m, day: d, hour: 12))! }
+        check(F.changedPart(from: day(2026, 11, 14), to: day(2026, 11, 15), calendar: cal) == .day, "the day")
+        check(F.changedPart(from: day(2026, 11, 14), to: day(2026, 12, 14), calendar: cal) == .month, "the month")
+        check(F.changedPart(from: day(2026, 1, 31), to: day(2026, 2, 28), calendar: cal) == .month, "the month, the day following into a shorter one")
+        check(F.changedPart(from: day(2026, 11, 14), to: day(2027, 11, 14), calendar: cal) == .year, "the year")
+        check(F.changedPart(from: day(2026, 11, 14), to: day(2026, 11, 14), calendar: cal) == nil, "nothing changed")
+        let gb = Locale(identifier: "en_GB")
+        expect(F.partWords(.day, of: day(2026, 11, 14), calendar: cal, locale: gb), "day 14")
+        expect(F.partWords(.month, of: day(2026, 11, 14), calendar: cal, locale: gb), "month November")
+        expect(F.partWords(.year, of: day(2026, 11, 14), calendar: cal, locale: gb), "year 2026", "no thousands separator")
+    }
     test("languages: one Arabic letter goes to the Arabic voice, not the English voice's letter name") {
         let english = AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix("en") }
         guard let english else { return }   // no English voice on this Mac: nothing to compare with

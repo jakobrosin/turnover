@@ -28,3 +28,7 @@ Fantastical 4 in English, with a calendar that has some events. Use a test calen
 13. Type "Lunch tomorrow 1pm": Option Return says what Fantastical has understood, and nothing is added.
 14. Type " with " and the start of a contact's name: after a moment the first suggestion and how many there are. Down and Up arrow: each suggestion and its place. Return on one: the sentence as it now stands. The same after " at " and after a slash.
 15. Return with no suggestion chosen: "Added", and the event in a line. Command Return from another field of the popover: the same.
+
+## Go to Date (Shift Command T)
+
+16. The dialog opens on the date field, said with its weekday. Tab or Right arrow: "month" and the month, then "year" and the year; Shift Tab or Left arrow: back. Tab from the year: the Cancel button. Shift Tab from Cancel: the year. Up or Down arrow: the new date, once.

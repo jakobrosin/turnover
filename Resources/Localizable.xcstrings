@@ -44370,6 +44370,21 @@
     },
     "Write code: TurnOver is on GitHub, and CONTRIBUTING.md there is the place to start." : {
       "comment" : "Help make TurnOver: contributing code"
+    },
+    "In Go to Date: the next part of the date (day, month, year)" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "In Go to Date: the previous part of the date" : {
+      "comment" : "A command, as the key list and keyboard help say it"
+    },
+    "day %@" : {
+      "comment" : "Go to Date in Fantastical: the part of the date the keyboard is on, and its value"
+    },
+    "month %@" : {
+      "comment" : "Go to Date in Fantastical: the part of the date the keyboard is on, and its value"
+    },
+    "year %@" : {
+      "comment" : "Go to Date in Fantastical: the part of the date the keyboard is on, and its value"
     }
   },
   "version" : "1.0"

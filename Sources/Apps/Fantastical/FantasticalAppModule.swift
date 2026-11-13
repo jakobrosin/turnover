@@ -46,6 +46,9 @@ public final class FantasticalAppModule: AppModule {
     /// Return opened an event: waiting for its popover to take the focus, then for the focus to come back.
     private enum Opened { case no, waiting, showing }
     private var opened = Opened.no
+    /// Go to Date's field: which part of the date the keyboard is on (its place in the field), and the date last known.
+    private var datePart = 0
+    private var dateKnown: Date?
 
     public required init(pid: pid_t, bundleIdentifier: String, appName: String) {
         super.init(pid: pid, bundleIdentifier: bundleIdentifier, appName: appName)
@@ -115,6 +118,16 @@ public final class FantasticalAppModule: AppModule {
             Tones.press()
             _ = AXUIElementPerformAction(e, kAXPressAction as CFString)
         }.isAvailable = { [weak self] in self?.restingControl() != nil }
+        addDateFieldScripts(cat)
+    }
+
+    /// Go to Date (Shift Command T): the date field's day, month and year are one element, and nothing says which
+    /// of them Tab or an arrow has moved to (13 Nov 2026). TurnOver keeps count and says the part.
+    private func addDateFieldScripts(_ cat: String) {
+        script("fantastical_nextDatePart", String(localized: "In Go to Date: the next part of the date (day, month, year)", comment: "A command, as the key list and keyboard help say it"), gestures: ["kb:rightArrow", "kb:tab"], category: cat) { [weak self] g in self?.moveDatePart(1, g) }
+            .isAvailable = { [weak self] in self?.dateField() != nil }
+        script("fantastical_previousDatePart", String(localized: "In Go to Date: the previous part of the date", comment: "A command, as the key list and keyboard help say it"), gestures: ["kb:leftArrow", "kb:shift+tab"], category: cat) { [weak self] g in self?.moveDatePart(-1, g) }
+            .isAvailable = { [weak self] in self?.dateField() != nil }
     }
 
     public override func objectClass(for element: AXUIElement, role: Role, subrole: String?) -> TurnOverObject.Type? {
@@ -590,6 +603,15 @@ public final class FantasticalAppModule: AppModule {
         // says is the news.
         if event.kind == .nameChange, event.obj.pid == pid, event.obj.element.role == "AXWindow", Date().timeIntervalSince(lastOwnMove) < 1.5 { return }
         if event.kind == .typedCharacter, event.obj.pid == pid, event.obj.element.string(kAXIdentifierAttribute) == Self.entryField { suggestionsSoon() }
+        if event.obj.pid == pid, Self.isSheetDateField(event.obj.element) {
+            let parts = Self.dateParts(of: event.obj.element), now = event.obj.element.attr(kAXValueAttribute) as? Date
+            // Tab comes in at the first part, Shift Tab at the last (checked with the key driver, 13 Nov 2026).
+            if event.kind == .gainFocus { datePart = InputManager.lastKeyIdentifier.hasSuffix("shift+tab") ? max(0, parts.count - 1) : 0 }
+            // The part that changed is the part the keyboard is on, whatever was counted (a click moves it too).
+            if event.kind == .valueChange, let before = dateKnown, let now, let changed = Self.changedPart(from: before, to: now, calendar: .current),
+               let i = parts.firstIndex(of: changed) { datePart = i }
+            dateKnown = now
+        }
         if [.gainFocus, .focusEntered].contains(event.kind), event.obj.pid == pid, inArea(event.obj.element) {
             // First: the week view reports its own focus again as an event's popover opens, which read as the popover
             // closing (the event said again, and Escape no longer TurnOver's).
@@ -617,7 +639,86 @@ public final class FantasticalAppModule: AppModule {
     /// Fantastical says the date it has scrolled to as its view turns ("Tuesday, 1. December 2026" on the way to 24
     /// December): after TurnOver's own move the day TurnOver says is the news, not that.
     public override func ignoresAnnouncement(_ text: String, after key: String, elapsed: TimeInterval) -> Bool {
-        Date().timeIntervalSince(lastOwnMove) < 1.5
+        // Go to Date's field says its new date itself at each change, and TurnOver says the field's new value: once.
+        Date().timeIntervalSince(lastOwnMove) < 1.5 || dateField() != nil
+    }
+
+    // MARK: Go to Date
+
+    public enum DatePart: Sendable { case day, month, year }
+
+    /// The parts of a date in the order a format writes them ("d. MMMM y": day, month, year), which is the order
+    /// they stand in the field.
+    nonisolated public static func dateParts(format: String) -> [DatePart] {
+        var out: [DatePart] = [], quoted = false
+        for c in format {
+            if c == "'" { quoted.toggle(); continue }
+            if quoted { continue }
+            let part: DatePart? = "dD".contains(c) ? .day : "ML".contains(c) ? .month : "yYu".contains(c) ? .year : nil
+            if let part, !out.contains(part) { out.append(part) }
+        }
+        return out
+    }
+
+    /// The part two dates differ in. The largest one: the day follows a month or a year into a shorter month (31
+    /// January, a month on, is 28 February).
+    nonisolated public static func changedPart(from a: Date, to b: Date, calendar: Calendar) -> DatePart? {
+        let x = calendar.dateComponents([.year, .month, .day], from: a), y = calendar.dateComponents([.year, .month, .day], from: b)
+        if x.year != y.year { return .year }
+        if x.month != y.month { return .month }
+        return x.day != y.day ? .day : nil
+    }
+
+    /// A date field in a sheet that shows a date and no time (NSDatePicker's element flags: 0xe0 the date's parts,
+    /// 0x0e the time's): Go to Date's. An event's own date and time controls are in a popover and keep their ways.
+    static func isSheetDateField(_ e: AXUIElement) -> Bool {
+        guard e.role == "AXDateTimeArea", e.element(kAXParentAttribute)?.role == "AXSheet" else { return false }
+        guard let flags = (e.attr("AXDateTimeComponents") as? NSNumber)?.intValue else { return true }
+        return flags & 0xe0 != 0 && flags & 0x0e == 0
+    }
+
+    /// The field's parts, in the region's order, without the ones it doesn't show.
+    static func dateParts(of e: AXUIElement) -> [DatePart] {
+        let flags = (e.attr("AXDateTimeComponents") as? NSNumber)?.intValue ?? 0xe0
+        let shown: [DatePart: Int] = [.day: 0x20, .month: 0x40, .year: 0x80]
+        return dateParts(format: DateFormatter.dateFormat(fromTemplate: "yMMMMd", options: 0, locale: .current) ?? "d MMMM y")
+            .filter { flags & (shown[$0] ?? 0) != 0 }
+    }
+
+    private func dateField() -> AXUIElement? {
+        guard let f = API.focusObject, f.pid == pid, Self.isSheetDateField(f.element) else { return nil }
+        return f.element
+    }
+
+    /// Tab and Shift Tab go through the parts and then out of the field; the arrows go round. The key is
+    /// Fantastical's; TurnOver says where it landed.
+    private func moveDatePart(_ step: Int, _ g: KeyboardGesture) {
+        guard let field = dateField() else { g.send(); return }
+        let parts = Self.dateParts(of: field)
+        var i = datePart + step
+        let tab = g.keyCode == 48
+        guard parts.count > 1, !tab || parts.indices.contains(i) else { g.send(); return }   // Tab off the end: the next control
+        i = (i + parts.count) % parts.count
+        g.send()
+        datePart = i
+        // Only if the keyboard is still in the field a moment later (the count can be out after a click).
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            guard let self, let now = self.dateField(), now.isSame(field), parts.indices.contains(self.datePart),
+                  let date = now.attr(kAXValueAttribute) as? Date else { return }
+            Speech.speakMessage(Self.partWords(parts[self.datePart], of: date, calendar: .current, locale: .current))
+        }
+    }
+
+    /// "day 14", "month November", "year 2026".
+    nonisolated public static func partWords(_ part: DatePart, of date: Date, calendar: Calendar, locale: Locale) -> String {
+        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        switch part {
+        case .day: return String(localized: "day \(String(c.day ?? 0))", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        case .month:
+            let f = DateFormatter(); f.locale = locale; f.calendar = calendar; f.timeZone = calendar.timeZone; f.dateFormat = "LLLL"
+            return String(localized: "month \(f.string(from: date))", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        case .year: return String(localized: "year \(String(c.year ?? 0))", comment: "Go to Date in Fantastical: the part of the date the keyboard is on, and its value")
+        }
     }
 
     // MARK: The new event field
@@ -843,7 +944,9 @@ final class FantasticalDateTimePart: TurnOverObject {
     override var value: String? {
         guard let date = element.attr(kAXValueAttribute) as? Date, let time = showsTime else { return super.value }
         let f = DateFormatter()
-        if time { f.dateStyle = .none; f.timeStyle = .short } else { f.dateStyle = .long; f.timeStyle = .none }
+        // Go to Date's field with the weekday, as Fantastical itself says each change there (13 Nov 2026).
+        let sheet = element.element(kAXParentAttribute)?.role == "AXSheet"
+        if time { f.dateStyle = .none; f.timeStyle = .short } else { f.dateStyle = sheet ? .full : .long; f.timeStyle = .none }
         return f.string(from: date)
     }
 }
