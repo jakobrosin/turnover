@@ -395,10 +395,18 @@ public final class FantasticalAppModule: AppModule {
         let event = events(day)[i], words = Self.text(of: event)
         _ = AXUIElementPerformAction(event, kAXPressAction as CFString)
         lastOwnMove = Date()
-        guard Poll.pumping(every: 0.15, limit: 1.5, { self.openPopover() != nil }), let box = openPopover(),
-              let title = Self.find(in: box, depth: 3, { $0.role == "AXTextField" })?.string(kAXValueAttribute)?.trimmingCharacters(in: .whitespaces),
-              !title.isEmpty, words.hasPrefix(title) else {
-            Tones.edge(); Log.io("fantastical: delete not sent: the event's popover didn't open or names another event")
+        // Waited for until its title is there, not only until it exists: the popover was found 0.2 s after the press
+        // with its title still empty, and every Delete was refused (13 Nov 2026).
+        var title = ""
+        _ = Poll.pumping(every: 0.1, limit: 2.0) {
+            guard let box = self.openPopover(),
+                  let shown = Self.find(in: box, depth: 3, { $0.role == "AXTextField" && $0.string(kAXIdentifierAttribute) == "title" })?
+                    .string(kAXValueAttribute)?.trimmingCharacters(in: .whitespacesAndNewlines), !shown.isEmpty else { return false }
+            title = shown
+            return true
+        }
+        guard !title.isEmpty, words.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(title) else {
+            Tones.edge(); Log.io("fantastical: delete not sent: the event's popover didn't open or names another event (title \(title.count) characters, event \(words.count))")
             Speech.speakMessage(String(localized: "Could not select this event in Fantastical. Nothing was deleted.", comment: "Delete in Fantastical: the event could not be selected first"))
             return
         }
