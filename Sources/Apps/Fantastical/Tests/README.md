@@ -18,11 +18,15 @@ Fantastical 4 in English, with a calendar that has some events. Use a test calen
 
 ## An event's details
 
-9. Return on an event: its popover opens on the title. Tab: the next control, round to the first after the last. The four date and time controls come as start date, start time, end date, end time, and the time controls say a time only.
+9. Return on an event: its details open on the title, with the keyboard in it. Tab: the next control, round to the first after the last. The four date and time controls come as start date, start time, end date, end time, and the time controls say a time only.
 10. Return or Space on a pop-up button or a checkbox there: it is pressed.
-11. Escape: the popover closes and the event is said again.
-11a. In the month view, on a day with more events than its box shows (six, say): Return on the last of them opens its popover all the same, by way of the day view; Escape closes it, the month view is back, and the event is said again.
-12. Delete on an event: Fantastical asks about that event, and no other. Delete on a day with no event chosen: nothing is deleted, and TurnOver says so.
+11. Escape: the details close and the event is said again, once, with nothing said over it.
+11a. In the month view, on a day with more events than its box shows (seven, say): Return on each of them, the last too, opens that event's details; Escape comes back to it. The view stays the month view.
+11b. Command Tab to another app and back, then Return on an event without pressing anything else first: its details open as in 9, and Escape closes them.
+11c. In the day view (Command 1): Return on an event puts the keyboard in the title of the details beside the day; Tab goes through them; Escape comes back to the event.
+11d. In the quarter view (Command 4) with weeks too small to show any event's title: Return on an event says "Could not open this event" after about two seconds, and the arrows go on working.
+11e. Return twice in quick succession, and Return followed at once by Down arrow: nothing is said twice, and "Could not open this event" is not said for an event that opened.
+12. Delete on an event: Fantastical asks about that event, and no other. The same on an event beyond the ones the day's box shows. Delete on a day with no event chosen: nothing is deleted, and TurnOver says so.
 
 ## A new event (Command N)
 

@@ -7123,6 +7123,9 @@
         }
       }
     },
+    "Could not open this event" : {
+      "comment" : "Return on an event in Fantastical, and its details didn't open"
+    },
     "Could not remove it" : {
       "comment" : "Spoken message",
       "localizations" : {

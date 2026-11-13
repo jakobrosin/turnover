@@ -15,9 +15,13 @@
 // three areas (below). The keys are TurnOver's whenever the keyboard is on the view, on the window, or on the
 // button beside the view where Command 1 to 5 leave it.
 //
-// An event's popover never takes the keyboard: TurnOver goes into it, Tab and Shift Tab move between its controls,
-// Return or Space presses the ones that can't hold the keyboard, and Escape comes back to the event. Delete presses
-// the event first, since Fantastical deletes what was last clicked, not what was last read.
+// Return on an event is Fantastical's own: TurnOver puts the keyboard on the view and presses the event, which
+// selects it, and sends Return on; Fantastical opens the selected event's details and puts the keyboard in their
+// title, whether the grid has drawn the event or not (a day's box draws what fits and "4 more…" for the rest, and
+// a press alone opens nothing for those: 13 Nov 2026, Experiments/2026-11-13-opening-events.md). In the details
+// Tab and Shift Tab are TurnOver's, through every control in order (Fantastical's own Tab passes the date and time
+// controls by), Return or Space presses the ones that can't hold the keyboard, and Escape comes back to the event.
+// Delete presses the event first too, since Fantastical deletes what it has selected, not what was last read.
 //
 // The new event field (Command N) says its suggestions as they come up and under Down and Up, what Fantastical has
 // understood (Option Return), and what was added (Return, or Command Return from the event's other fields).
@@ -27,6 +31,7 @@
 // "all-day", "Event details") are its English interface's; in another language the keys still move, with
 // Fantastical's whole sentences.
 import Foundation
+import AppKit
 import ApplicationServices
 
 public final class FantasticalAppModule: AppModule {
@@ -48,10 +53,9 @@ public final class FantasticalAppModule: AppModule {
     private var opened = Opened.no
     /// Go to Date's field: which part of the date the keyboard is on (its place in the field), and the date last known.
     private var datePart = 0
-    /// An event opened by way of the day view: the view to go back to when its popover closes (its place among the
-    /// toolbar's view buttons).
-    private var returnView: Int?
     private var dateKnown: Date?
+    /// Counts Returns on events: a look for the details that is still waiting when another has started is dropped.
+    private var openRequest = 0
 
     public required init(pid: pid_t, bundleIdentifier: String, appName: String) {
         super.init(pid: pid, bundleIdentifier: bundleIdentifier, appName: appName)
@@ -72,9 +76,10 @@ public final class FantasticalAppModule: AppModule {
                 self.sayDay()
             }
         }.isAvailable = { [weak self] in self?.inView() == true }
-        // Fantastical's keyboard never goes into the popover and never comes back from it, so neither is news to
-        // TurnOver: Escape closes it and the event is said again, back in the month view.
+        // Escape in an event's details is Fantastical's, and closes them. TurnOver's part is what is said then: the
+        // event again, not the view the keyboard comes back to.
         script("fantastical_closeEvent", String(localized: "Closes the event's details, back to the event", comment: "A command, as the key list and keyboard help say it"), gestures: ["kb:escape"], category: cat) { [weak self] g in
+            self?.lastOwnMove = Date()
             g.send()
             self?.leavePopover()
         }.isAvailable = { [weak self] in self?.opened == .showing }
@@ -140,9 +145,13 @@ public final class FantasticalAppModule: AppModule {
 
     // MARK: The view
 
+    /// The calendar window in use. Not the first window whatever it is: a day with more events than fit can have its
+    /// box open over the grid, a window of its own that lists that week's days again (13 Nov 2026).
     private func window() -> AXUIElement? {
         let app = AXUIElementCreateApplication(pid)
-        return app.element(kAXFocusedWindowAttribute) ?? app.elements(kAXWindowsAttribute).first
+        if let w = app.element(kAXFocusedWindowAttribute), Self.isCalendarWindow(w) { return w }
+        let all = app.elements(kAXWindowsAttribute)
+        return all.first(where: Self.isCalendarWindow) ?? app.element(kAXFocusedWindowAttribute) ?? all.first
     }
 
     private static func isMonthView(_ e: AXUIElement) -> Bool {
@@ -195,11 +204,20 @@ public final class FantasticalAppModule: AppModule {
         return false
     }
 
+    /// In an event's details: a popover, a sheet, or the details the day view shows beside the day, in the window
+    /// itself (13 Nov 2026).
     private func inPopover(_ element: AXUIElement) -> Bool {
         var e: AXUIElement? = element
         var hops = 0
-        while let x = e, hops < 10 { if x.role == "AXPopover" || x.role == "AXSheet" { return true }; e = x.element(kAXParentAttribute); hops += 1 }
+        while let x = e, hops < 10 {
+            let role = x.role
+            if role == "AXPopover" || role == "AXSheet" || Self.isDetails(x, role: role) { return true }
+            e = x.element(kAXParentAttribute); hops += 1
+        }
         return false
+    }
+    private static func isDetails(_ e: AXUIElement, role: String) -> Bool {
+        role == "AXScrollArea" && e.string(kAXDescriptionAttribute) == "Event details"
     }
 
     /// A day as Fantastical lists it: its whole sentence, and the date alone ("Thursday, 12. November 2026").
@@ -336,6 +354,7 @@ public final class FantasticalAppModule: AppModule {
     }
 
     private func moveDays(_ n: Int, _ g: KeyboardGesture) {
+        if opened == .waiting { opened = .no }
         var all = days()
         guard !all.isEmpty else { g.send(); return }
         if dayShowing(current) == nil { current = startingDay()?.label; eventIndex = nil }
@@ -373,6 +392,7 @@ public final class FantasticalAppModule: AppModule {
     }
 
     private func moveEvent(_ step: Int, _ g: KeyboardGesture) {
+        if opened == .waiting { opened = .no }
         if dayShowing(current) == nil { current = startingDay()?.label; eventIndex = nil }
         guard let day = dayShowing(current) else { g.send(); return }
         let list = events(day)
@@ -393,74 +413,67 @@ public final class FantasticalAppModule: AppModule {
         Speech.speakMessage("\(Self.brief(Self.text(of: list[i]), dayDate: Self.dateAlone(day.label))), \(Phrases.position(i + 1, of: list.count))")
     }
 
+    /// Return on an event, Fantastical's own way (found 13 Nov 2026 in its month, week and day views; before, the
+    /// event was pressed and TurnOver went into the popover that came up, which never came for an event the grid
+    /// hadn't drawn). With the keyboard on the view, a pressed event is the selected one whether it is drawn or not,
+    /// and Return opens the selected event's details, if they aren't open yet, and puts the keyboard in their
+    /// title. So: the keyboard on the view, the event pressed, and Return sent on. The keyboard's arrival in the
+    /// details is the news, read as any focus is; Escape there is Fantastical's too, and comes back to the view.
     private func openEvent(_ g: KeyboardGesture) {
         guard let day = dayShowing(current), let i = eventIndex, i < events(day).count else { g.send(); return }
         Tones.press()
+        lastOwnMove = Date()
+        holdKeyboard()
+        _ = AXUIElementPerformAction(events(day)[i], kAXPressAction as CFString)
+        lastOwnMove = Date()
         opened = .waiting
-        lastOwnMove = Date()
-        let event = events(day)[i], words = Self.text(of: event)
-        // A day in the month grid with more events than fit draws the first few and a "more" line, and an event
-        // it hasn't drawn takes no press: nothing opened, with nothing said (Jakob, 13 Nov 2026: the fourth of six
-        // on a day of 118 points; its frame is as good as the others'). Those open by way of the day view.
-        let drawn = monthArea() == nil || i < Self.drawnCount(day: Self.frame(day.element), events: events(day).map { Self.frame($0) })
-        if drawn {
-            _ = AXUIElementPerformAction(event, kAXPressAction as CFString)
-            if enterPopover(limit: 1.5) { return }
+        openRequest += 1
+        g.send()
+        confirmOpened(openRequest, sentGetInfo: false)
+    }
+
+    /// Looks, a while after Return went on, whether the keyboard has come into the details (handleEvent notes it
+    /// when it does: 0.3 to 0.5 s after the key, 13 Nov 2026). If the details are open without it, TurnOver goes in
+    /// itself, as it did before. If nothing is open, Get Info (Command I) is sent once: it opens the selected
+    /// event's details wherever the keyboard is, where Return needs it on the view. It also closes details that are
+    /// open, so it waits long enough for a slow Return to have shown them. After that it is said that the event
+    /// didn't open. Looked for by a timer, not waited for: the script that sent Return has ended.
+    private func confirmOpened(_ request: Int, sentGetInfo: Bool) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + (sentGetInfo ? 0.8 : 1.5)) { [weak self] in
+            guard let self, request == self.openRequest, self.opened == .waiting else { return }
+            // Nothing more is done, and no key sent, once the person has gone elsewhere: a key sent now would be
+            // another app's, or another part of this one's.
+            guard NSWorkspace.shared.frontmostApplication?.processIdentifier == self.pid, self.inView() else {
+                self.opened = .no
+                Log.io("fantastical: the details weren't seen to open, and the keyboard has moved on; left at that")
+                return
+            }
+            if self.enterPopover(limit: 0) {
+                Log.io("fantastical: the details opened without the keyboard; TurnOver went into them itself")
+                return
+            }
+            if !sentGetInfo {
+                Log.io("fantastical: no details 1.5 s after Return; Get Info is sent")
+                self.lastOwnMove = Date()
+                KeyboardGesture(identifier: "kb:command+i")?.send()
+                self.confirmOpened(request, sentGetInfo: true)
+                return
+            }
+            self.opened = .no
+            self.deselect()
+            Tones.edge(); Log.io("fantastical: the event's details didn't open")
+            Speech.speakMessage(String(localized: "Could not open this event", comment: "Return on an event in Fantastical, and its details didn't open"))
         }
-        if monthArea() != nil, openThroughDayView(day, words: words) { return }
-        opened = .no
-        Tones.edge(); Log.io("fantastical: no popover after the press")
     }
 
-    /// How many of a day's events the month grid draws: all of them when they fit in the day's box; otherwise the
-    /// ones that fit less one, whose line says how many more there are.
-    nonisolated public static func drawnCount(day: CGRect?, events: [CGRect?]) -> Int {
-        guard let day else { return events.count }
-        let fitting = events.prefix { $0.map { $0.maxY <= day.maxY + 1 } ?? true }.count
-        return fitting == events.count ? fitting : max(0, fitting - 1)
-    }
-
-    /// The toolbar's view buttons: Day, Week, Month, Quarter, Year, in that order (by their place, not their words).
-    private func viewButtons() -> [AXUIElement] {
-        guard let w = window(), let bar = Self.find(in: w, depth: 2, { $0.role == "AXToolbar" }) else { return [] }
-        let groups = bar.elements(kAXChildrenAttribute).filter { $0.role == "AXRadioGroup" }.map { $0.elements(kAXChildrenAttribute) }
-        return groups.first { $0.count == 5 } ?? []
-    }
-
-    /// Pressing a day selects it, and the day view then shows that day with every event of it, each of which takes
-    /// a press (checked with the key driver, 13 Nov 2026). The popover opens there; closing it comes back.
-    private func openThroughDayView(_ day: Day, words: String) -> Bool {
-        let buttons = viewButtons()
-        guard buttons.count == 5, let was = buttons.firstIndex(where: { ($0.attr(kAXValueAttribute) as? NSNumber)?.intValue == 1 }), was != 0 else { return false }
-        Log.io("fantastical: the event isn't drawn in the grid; opening it by way of the day view")
-        _ = AXUIElementPerformAction(day.element, kAXPressAction as CFString)
-        _ = AXUIElementPerformAction(buttons[0], kAXPressAction as CFString)
-        lastOwnMove = Date()
-        returnView = was
-        var event: AXUIElement?
-        _ = Poll.pumping(every: 0.1, limit: 2.0) {
-            guard let areas = self.columnAreas() else { return false }
-            event = self.columnEvents(day, in: areas).first { Self.text(of: $0) == words }
-            return event != nil
-        }
-        lastOwnMove = Date()
-        if let event {
-            _ = AXUIElementPerformAction(event, kAXPressAction as CFString)
-            if enterPopover(limit: 2.0) { return true }
-        }
-        restoreView()
-        return false
-    }
-
-    /// Back to the view an event was opened from.
-    private func restoreView() {
-        guard let i = returnView else { return }
-        returnView = nil
-        let buttons = viewButtons()
-        guard buttons.indices.contains(i) else { return }
-        _ = AXUIElementPerformAction(buttons[i], kAXPressAction as CFString)
-        lastOwnMove = Date()
-        _ = Poll.pumping(every: 0.1, limit: 1.5) { self.monthArea() != nil }
+    /// The keyboard itself on the view. After another app was in front Fantastical has it nowhere in the window (it
+    /// names no focused element), and then Return, Delete and Escape are nobody's: an open popover stayed open under
+    /// one Escape after another (13 Nov 2026). The month and quarter views take the keyboard when asked, and so do
+    /// the week and day views' areas.
+    private func holdKeyboard() {
+        if let has = AXUIElementCreateApplication(pid).element(kAXFocusedUIElementAttribute), inArea(has) { return }
+        guard let area = monthArea() ?? columnAreas()?["timed events"] else { return }
+        _ = area.set(kAXFocusedAttribute, kCFBooleanTrue)
         lastOwnMove = Date()
     }
 
@@ -471,24 +484,40 @@ public final class FantasticalAppModule: AppModule {
             return
         }
         let event = events(day)[i], words = Self.text(of: event)
+        // Delete is the view's to take, so the keyboard is put there; and it takes what Fantastical has selected,
+        // which the press makes this event.
+        holdKeyboard()
+        if opened == .waiting { opened = .no }
         _ = AXUIElementPerformAction(event, kAXPressAction as CFString)
         lastOwnMove = Date()
-        // Waited for until its title is there, not only until it exists: the popover was found 0.2 s after the press
-        // with its title still empty, and every Delete was refused (13 Nov 2026).
+        // What is selected is checked by its details' title before the key goes on. Waited for until the title is
+        // there, not only until the popover is: it was found 0.2 s after the press with its title still empty, and
+        // every Delete was refused (13 Nov 2026).
         var title = ""
-        _ = Poll.pumping(every: 0.1, limit: 2.0) {
+        let named = { () -> Bool in
             guard let box = self.openPopover(),
                   let shown = Self.find(in: box, depth: 3, { $0.role == "AXTextField" && $0.string(kAXIdentifierAttribute) == "title" })?
                     .string(kAXValueAttribute)?.trimmingCharacters(in: .whitespacesAndNewlines), !shown.isEmpty else { return false }
             title = shown
             return true
         }
+        if !Poll.pumping(every: 0.1, limit: 0.8, named) {
+            // An event the grid hasn't drawn is selected by the press and shows no details: Get Info shows the
+            // selected event's. Only with nothing open, for Get Info closes details that are.
+            if openPopover() == nil {
+                Log.io("fantastical: no details after the press; Get Info is sent to see what is selected")
+                KeyboardGesture(identifier: "kb:command+i")?.send()
+                lastOwnMove = Date()
+            }
+            _ = Poll.pumping(every: 0.1, limit: 1.2, named)
+        }
         guard !title.isEmpty, words.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(title) else {
-            Tones.edge(); Log.io("fantastical: delete not sent: the event's popover didn't open or names another event (title \(title.count) characters, event \(words.count))")
+            Tones.edge(); Log.io("fantastical: delete not sent: the event's details didn't open or name another event (title \(title.count) characters, event \(words.count))")
+            deselect()
             Speech.speakMessage(String(localized: "Could not select this event in Fantastical. Nothing was deleted.", comment: "Delete in Fantastical: the event could not be selected first"))
             return
         }
-        Log.io("fantastical: the event is selected (its popover's title matches); the delete key goes on")
+        Log.io("fantastical: the event is selected (its details' title matches); the delete key goes on")
         opened = .no; eventIndex = nil
         g.send()
     }
@@ -503,18 +532,26 @@ public final class FantasticalAppModule: AppModule {
     /// none though the popover was there: 12 Nov 2026).
     private func openPopover() -> AXUIElement? {
         // Where it was found on 12 Nov 2026: a child of the week's group in the month view, beside that week's days.
+        // With the day's box open over the grid it is a child of the view itself (13 Nov 2026).
         if let area = monthArea() {
-            for week in area.elements(kAXChildrenAttribute) where week.role == "AXGroup" {
+            let parts = area.elements(kAXChildrenAttribute)
+            if let box = parts.first(where: Self.isEventPopover) { return box }
+            for week in parts where week.role == "AXGroup" {
                 if let box = week.elements(kAXChildrenAttribute).first(where: Self.isEventPopover) { return box }
             }
         }
         // In the week and day views: in one of their three areas, or under a day's group there.
-        for area in (columnAreas() ?? [:]).values {
+        let areas = columnAreas() ?? [:]
+        for area in areas.values {
             for child in area.elements(kAXChildrenAttribute) {
                 if Self.isEventPopover(child) { return child }
                 if child.role == "AXGroup", let box = child.elements(kAXChildrenAttribute).first(where: Self.isEventPopover) { return box }
             }
         }
+        // The day view opens no popover: the selected event's details stand beside the day, with the three areas,
+        // and go when nothing is selected (13 Nov 2026).
+        if let beside = areas["timed events"]?.element(kAXParentAttribute)?.elements(kAXChildrenAttribute),
+           let details = beside.first(where: { Self.isDetails($0, role: $0.role) }) { return details }
         let app = AXUIElementCreateApplication(pid)
         var queue = app.elements(kAXWindowsAttribute) + app.elements(kAXChildrenAttribute)
         var seen = 0
@@ -525,7 +562,8 @@ public final class FantasticalAppModule: AppModule {
                 if Self.isEventPopover(e) { return e }
                 continue
             }
-            if role == "AXMenuBar" || role == "AXStaticText" && e.elements(kAXChildrenAttribute).isEmpty { continue }
+            // Not into a table: the sidebar's event list is hundreds of rows, and no popover hangs under one.
+            if role == "AXMenuBar" || role == "AXTable" || role == "AXStaticText" && e.elements(kAXChildrenAttribute).isEmpty { continue }
             queue.append(contentsOf: e.elements(kAXChildrenAttribute))
         }
         return nil
@@ -651,12 +689,31 @@ public final class FantasticalAppModule: AppModule {
 
     /// Escape went to Fantastical: once the popover has gone, TurnOver is back on the month view and says the event.
     private func leavePopover() {
-        _ = Poll.pumping(every: 0.15, limit: 0.9) { self.openPopover() == nil }
+        // Escape closes the details only where Fantastical has the keyboard to take it from. With the keyboard
+        // nowhere in its window a popover stayed open, key after key, while TurnOver read on as if it had closed (13
+        // Nov 2026: the 0.9 s then waited ran out in the log). The press on the day that follows closes it too.
+        var closed = Poll.pumping(every: 0.1, limit: 0.5) { self.openPopover() == nil }
+        deselect()
+        if !closed {
+            closed = Poll.pumping(every: 0.1, limit: 0.5) { self.openPopover() == nil }
+            Log.io("fantastical: Escape left the details open; after the press on the day they \(closed ? "closed" : "stayed open")")
+        }
         opened = .no
         lastOwnMove = Date()
-        restoreView()
         if let area = monthArea() ?? columnAreas()?["timed events"] { AXHandler.shared.focusChanged(area, pid: pid) }
         sayEvent()
+    }
+
+    /// Leaves Fantastical with no event selected, by a press on the day: a click on it, which selects the day,
+    /// closes what is open over the grid, and nothing more (13 Nov 2026, each time it was tried). An event left
+    /// selected is Fantastical's to act on while TurnOver reads on elsewhere: its Duplicate and Get Info take the
+    /// selected event, not the one being read, and Control with an arrow moves it to another day (that last from a
+    /// reading of the program, not tried). In the grid views only: what a press on a day does in the week view
+    /// isn't known.
+    private func deselect() {
+        guard monthArea() != nil, let day = dayShowing(current) else { return }
+        _ = AXUIElementPerformAction(day.element, kAXPressAction as CFString)
+        lastOwnMove = Date()
     }
 
     /// Focus news inside the month view just after TurnOver's own move is Fantastical following it: not read. Arriving
@@ -665,6 +722,10 @@ public final class FantasticalAppModule: AppModule {
         // The window's title changes as the view turns ("Month (December 2026)"): after TurnOver's own move the day it
         // says is the news.
         if event.kind == .nameChange, event.obj.pid == pid, event.obj.element.role == "AXWindow", Date().timeIntervalSince(lastOwnMove) < 1.5 { return }
+        // In the day view Escape takes an event's details away and leaves the keyboard on the window itself (13 Nov
+        // 2026): after TurnOver's own move the event it says is the news, not the window.
+        if event.kind == .gainFocus, event.obj.pid == pid, event.obj.element.role == "AXWindow", Self.isCalendarWindow(event.obj.element),
+           Date().timeIntervalSince(lastOwnMove) < 1.0 { return }
         if event.kind == .typedCharacter, event.obj.pid == pid, event.obj.element.string(kAXIdentifierAttribute) == Self.entryField { suggestionsSoon() }
         if event.obj.pid == pid, Self.isSheetDateField(event.obj.element) {
             let parts = Self.dateParts(of: event.obj.element), now = event.obj.element.attr(kAXValueAttribute) as? Date
@@ -692,7 +753,7 @@ public final class FantasticalAppModule: AppModule {
             if opened == .showing {
                 opened = .no
                 lastOwnMove = Date()
-                DispatchQueue.main.async { [weak self] in self?.restoreView(); self?.sayEvent() }
+                DispatchQueue.main.async { [weak self] in self?.deselect(); self?.sayEvent() }
                 return
             }
             if event.kind == .gainFocus, Self.isMonthView(event.obj.element) || Self.isColumnArea(event.obj.element) {
